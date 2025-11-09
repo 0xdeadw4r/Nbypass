@@ -243,8 +243,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const apiClient = await UIDBypassClient.create();
           apiResult = await apiClient.createUID(uidData.uidValue, uidData.duration.toString());
           console.log('[UID Creation] Successfully synced with external API');
+          
+          // Log successful external API sync
+          await storage.logActivity({
+            userId: uidData.userId,
+            action: "external_api_create_success",
+            details: `UID ${uidData.uidValue} successfully created on external API (${uidData.duration}h duration)`,
+          });
         } else {
           console.log('[UID Creation] External API not configured, skipping sync');
+          await storage.logActivity({
+            userId: uidData.userId,
+            action: "external_api_not_configured",
+            details: `UID ${uidData.uidValue} created locally only - external API not configured`,
+          });
         }
       } catch (error: any) {
         apiError = error.message || 'Unknown API error';
@@ -252,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log the API failure but don't block UID creation
         await storage.logActivity({
           userId: uidData.userId,
-          action: "external_api_error",
+          action: "external_api_create_error",
           details: `UID ${uidData.uidValue} created locally but external API sync failed: ${apiError}`,
         });
       }
@@ -358,6 +370,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const apiClient = await UIDBypassClient.create();
         const result = await apiClient.deleteUID(uid.uidValue);
         console.log(`[External API] Delete response:`, JSON.stringify(result, null, 2));
+        
+        // Log successful external API delete
+        await storage.logActivity({
+          userId: req.session.userId!,
+          action: "external_api_delete_success",
+          details: `UID ${uid.uidValue} successfully deleted from external API`,
+        });
       } catch (apiError: any) {
         console.error("[External API] Delete error:", apiError);
         console.error("[External API] Error details:", {
@@ -365,6 +384,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           code: apiError.code,
           statusCode: apiError.statusCode
         });
+        
+        // Log external API delete failure
+        await storage.logActivity({
+          userId: req.session.userId!,
+          action: "external_api_delete_error",
+          details: `Failed to delete UID ${uid.uidValue} from external API: ${apiError.message || 'Unknown error'}`,
+        });
+        
         // Return error to client instead of silently continuing
         return res.status(500).json({ 
           error: "Failed to delete UID from external service",
@@ -451,6 +478,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const apiClient = await UIDBypassClient.create();
         const result = await apiClient.updateUID(oldUidValue, newUidValue);
         console.log(`[External API] Update response:`, JSON.stringify(result, null, 2));
+        
+        // Log successful external API update
+        await storage.logActivity({
+          userId: req.session.userId!,
+          action: "external_api_update_success",
+          details: `UID successfully updated on external API from ${oldUidValue} to ${newUidValue}`,
+        });
       } catch (apiError: any) {
         console.error("[External API] Update error:", apiError);
         console.error("[External API] Error details:", {
@@ -458,6 +492,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           code: apiError.code,
           statusCode: apiError.statusCode
         });
+        
+        // Log external API update failure
+        await storage.logActivity({
+          userId: req.session.userId!,
+          action: "external_api_update_error",
+          details: `Failed to update UID on external API from ${oldUidValue} to ${newUidValue}: ${apiError.message || 'Unknown error'}`,
+        });
+        
         return res.status(400).json({ 
           error: "Failed to update UID on external service",
           details: apiError instanceof UIDBypassError ? apiError.message : "Unknown error"

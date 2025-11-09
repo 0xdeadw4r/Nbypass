@@ -211,9 +211,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate expiration date (duration in hours)
       const expiresAt = new Date(Date.now() + uidData.duration * 3600000);
       
-      // Determine plan ID based on duration
-      const durationInDays = Math.ceil(uidData.duration / 24);
-      const planId = durationInDays;
+      // Map duration (hours) to plan ID - matching API plan structure
+      const durationToPlanId: Record<number, number> = {
+        24: 1,    // 1 day
+        72: 3,    // 3 days
+        168: 7,   // 7 days
+        336: 14,  // 14 days
+        720: 30,  // 30 days
+      };
+      
+      const planId = durationToPlanId[uidData.duration];
+      if (!planId) {
+        return res.status(400).json({ error: "Invalid duration - no matching plan" });
+      }
       
       // Create UID record in MongoDB FIRST (local storage is primary)
       const uid = await storage.createUid({

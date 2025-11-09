@@ -41,20 +41,8 @@ export class UIDBypassClient {
     params: Record<string, any>,
     method: string = "POST",
   ): Promise<any> {
-    // Clean up base URL and ensure it ends with /api/handler (no .php)
-    let apiUrl = this.baseUrl.replace(/\/$/, "");
-    
-    // Remove any .php extension if present
-    apiUrl = apiUrl.replace(/\.php$/, "");
-    
-    // Ensure it ends with /api/handler
-    if (!apiUrl.endsWith("/api/handler")) {
-      // Remove trailing /api if present
-      apiUrl = apiUrl.replace(/\/api$/, "");
-      apiUrl = apiUrl + "/api/handler";
-    }
-
-    const url = new URL(apiUrl);
+    // Use the base URL directly - it should already be configured correctly
+    const url = new URL(this.baseUrl);
     url.searchParams.append("action", action);
 
     console.log(`[UIDBypassClient] Request URL: ${url.toString()}`);

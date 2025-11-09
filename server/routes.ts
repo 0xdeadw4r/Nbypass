@@ -217,8 +217,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create UID record in MongoDB FIRST (local storage is primary)
       const uid = await storage.createUid({
-        ...uidData,
+        userId: uidData.userId,
+        uidValue: uidData.uidValue,
+        duration: uidData.duration,
         planId: planId,
+        region: 'PK',
         cost: cost.toFixed(2),
         expiresAt,
       });

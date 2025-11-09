@@ -1,3 +1,4 @@
+
 import { storage } from "./storage";
 
 export class UIDBypassError extends Error {
@@ -40,9 +41,16 @@ export class UIDBypassClient {
     params: Record<string, any>,
     method: string = "POST",
   ): Promise<any> {
-    // Ensure baseUrl ends with /api/handler (no .php)
+    // Clean up base URL and ensure it ends with /api/handler (no .php)
     let apiUrl = this.baseUrl.replace(/\/$/, "");
+    
+    // Remove any .php extension if present
+    apiUrl = apiUrl.replace(/\.php$/, "");
+    
+    // Ensure it ends with /api/handler
     if (!apiUrl.endsWith("/api/handler")) {
+      // Remove trailing /api if present
+      apiUrl = apiUrl.replace(/\/api$/, "");
       apiUrl = apiUrl + "/api/handler";
     }
 

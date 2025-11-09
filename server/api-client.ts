@@ -78,11 +78,24 @@ export class UIDBypassClient {
         `[UIDBypassClient] Response: ${response.status} ${response.statusText} (${duration}ms)`,
       );
 
-      const data = await response.json();
-      console.log(
-        `[UIDBypassClient] Response data:`,
-        JSON.stringify(data, null, 2),
-      );
+      let data;
+      const responseText = await response.text();
+      console.log(`[UIDBypassClient] Raw response text:`, responseText);
+      
+      try {
+        data = JSON.parse(responseText);
+        console.log(
+          `[UIDBypassClient] Parsed response data:`,
+          JSON.stringify(data, null, 2),
+        );
+      } catch (parseError) {
+        console.error(`[UIDBypassClient] Failed to parse JSON response:`, parseError);
+        throw new UIDBypassError(
+          `Invalid JSON response from API: ${responseText.substring(0, 200)}`,
+          undefined,
+          response.status,
+        );
+      }
 
       if (!response.ok) {
         throw new UIDBypassError(

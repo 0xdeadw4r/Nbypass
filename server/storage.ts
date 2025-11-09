@@ -175,6 +175,8 @@ export class MongoDBStorage implements IStorage {
       userId: createUid.userId,
       uidValue: createUid.uidValue,
       duration: createUid.duration,
+      planId: createUid.planId,
+      region: createUid.region || 'PK',
       cost: parseFloat(createUid.cost as any),
       status: 'active',
       createdAt: new Date(),

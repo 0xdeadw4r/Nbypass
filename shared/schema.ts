@@ -102,7 +102,8 @@ export const createUidSchema = createInsertSchema(uids).omit({
   createdAt: true,
   status: true,
 }).extend({
-  planId: z.number().optional(),
+  planId: z.number(),
+  region: z.string().optional().default('PK'),
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).pick({

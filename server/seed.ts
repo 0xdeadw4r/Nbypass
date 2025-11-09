@@ -1,5 +1,5 @@
 import { connectToMongoDB } from "./mongodb";
-import { UserModel, SettingsModel } from "./mongodb-models";
+import { UserModel, SettingsModel, PlanModel } from "./mongodb-models";
 import { hashPassword } from "./auth";
 
 async function seed() {
@@ -37,6 +37,23 @@ async function seed() {
         updatedAt: new Date(),
       });
       console.log("✅ Settings configured");
+    }
+
+    const existingPlans = await PlanModel.countDocuments();
+    if (existingPlans === 0) {
+      const defaultPlans = [
+        { code: 1, name: "1 day", days: 1, creditsCost: 0, isActive: true },
+        { code: 2, name: "7 days", days: 7, creditsCost: 10, isActive: true },
+        { code: 3, name: "14 days", days: 14, creditsCost: 18, isActive: true },
+        { code: 4, name: "30 days", days: 30, creditsCost: 35, isActive: true },
+        { code: 5, name: "60 days", days: 60, creditsCost: 65, isActive: true },
+        { code: 6, name: "90 days", days: 90, creditsCost: 90, isActive: true },
+      ];
+
+      await PlanModel.insertMany(defaultPlans);
+      console.log("✅ Default plans created");
+    } else {
+      console.log("ℹ️  Plans already exist");
     }
 
     console.log("✅ Database seeded successfully!");

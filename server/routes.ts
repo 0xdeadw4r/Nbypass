@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { authenticateUser, hashPassword } from "./auth";
 import { requireAuth, requireOwner } from "./middleware";
 import { UIDBypassClient, UIDBypassError } from "./api-client";
+import { registerApiHandler } from "./api-handler";
 import { 
   loginSchema, 
   insertUserSchema, 
@@ -14,6 +15,7 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  registerApiHandler(app);
   // Authentication - public endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {

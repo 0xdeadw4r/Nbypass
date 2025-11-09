@@ -216,21 +216,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate expiration date (duration in hours)
         const expiresAt = new Date(Date.now() + uidData.duration * 3600000);
         
-        // Map duration (hours) to plan ID
-        const durationToPlanId: Record<number, number> = {
-          24: 1,    // 1 day
-          72: 2,    // 3 days  
-          168: 3,   // 7 days
-          336: 4,   // 14 days
-          720: 5,   // 30 days
-        };
-        
-        const planId = durationToPlanId[uidData.duration] || 1;
+        // Extract plan ID from API response
+        const planId = apiResult.data?.plan?.id;
+        if (!planId) {
+          return res.status(500).json({ error: "Failed to get plan ID from API response" });
+        }
         
         // Create UID record in database with server-calculated cost and expiresAt
         const uid = await storage.createUid({
           ...uidData,
-          planId: planId,
+          planId: Number(planId),
           cost: cost.toFixed(2),
           expiresAt,
         });

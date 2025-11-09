@@ -101,6 +101,8 @@ export const createUidSchema = createInsertSchema(uids).omit({
   id: true,
   createdAt: true,
   status: true,
+}).extend({
+  planId: z.number().optional(),
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).pick({

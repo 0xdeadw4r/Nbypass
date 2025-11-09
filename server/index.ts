@@ -4,7 +4,9 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { cleanupScheduler } from "./cleanup-scheduler";
 import { connectToMongoDB } from "./mongodb";
+import { initializeDatabase } from "./db-init";
 import MongoStore from "connect-mongo";
+import mongoose from "mongoose";
 
 const app = express();
 
@@ -13,25 +15,6 @@ declare module 'http' {
     rawBody: unknown
   }
 }
-
-app.use(session({
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    dbName: process.env.MONGODB_DB_NAME || 'test',
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60,
-  }),
-  secret: process.env.SESSION_SECRET || "uid-management-secret-key-change-in-production",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // Set to false for Replit deployment
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000,
-  },
-  proxy: true, // Trust proxy headers from Replit
-}));
 
 app.use(express.json({
   verify: (req, _res, buf) => {
@@ -72,6 +55,25 @@ app.use((req, res, next) => {
 
 (async () => {
   await connectToMongoDB();
+  await initializeDatabase();
+
+  app.use(session({
+    store: MongoStore.create({
+      client: mongoose.connection.getClient(),
+      collectionName: 'sessions',
+      ttl: 24 * 60 * 60,
+    }),
+    secret: process.env.SESSION_SECRET || "uid-management-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+    proxy: true,
+  }));
   
   const server = await registerRoutes(app);
 

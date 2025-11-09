@@ -154,4 +154,11 @@ export class UIDBypassClient {
     console.log(`[UIDBypassClient] renewUID() - UID: ${uid}, Days: ${days}`);
     return this.request("renew_uid_api", { uid, days }, "POST");
   }
+
+  async updateUID(oldUid: string, newUid: string): Promise<any> {
+    console.log(`[UIDBypassClient] updateUID() - Old UID: ${oldUid}, New UID: ${newUid}`);
+    return this.request("remove_uid_api", { uid: oldUid }, "POST").then(async () => {
+      return this.request("add_uid_free_api", { uid: newUid, region: "PK" }, "POST");
+    });
+  }
 }

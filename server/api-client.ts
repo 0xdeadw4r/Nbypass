@@ -37,28 +37,37 @@ export class UIDBypassClient {
 
   private async request(
     action: string,
-    params: Record<string, string>,
+    params: Record<string, any>,
+    method: string = "POST",
   ): Promise<any> {
     const url = new URL(this.baseUrl);
     url.searchParams.append("action", action);
-    url.searchParams.append("api_key", this.apiKey);
-
-    for (const [key, value] of Object.entries(params)) {
-      url.searchParams.append(key, value);
-    }
 
     console.log(`[UIDBypassClient] Request URL: ${url.toString()}`);
-    console.log(`[UIDBypassClient] Action: ${action}, Params:`, params);
+    console.log(
+      `[UIDBypassClient] Method: ${method}, Action: ${action}, Body:`,
+      params,
+    );
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
       const startTime = Date.now();
-      const response = await fetch(url.toString(), {
-        method: "GET",
+      const fetchOptions: RequestInit = {
+        method,
         signal: controller.signal,
-      });
+        headers: {
+          "X-API-Key": this.apiKey,
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (method === "POST" && Object.keys(params).length > 0) {
+        fetchOptions.body = JSON.stringify(params);
+      }
+
+      const response = await fetch(url.toString(), fetchOptions);
       const duration = Date.now() - startTime;
 
       clearTimeout(timeout);
@@ -67,23 +76,23 @@ export class UIDBypassClient {
         `[UIDBypassClient] Response: ${response.status} ${response.statusText} (${duration}ms)`,
       );
 
-      if (!response.ok) {
-        throw new UIDBypassError(
-          `HTTP error: ${response.statusText}`,
-          undefined,
-          response.status,
-        );
-      }
-
       const data = await response.json();
       console.log(
         `[UIDBypassClient] Response data:`,
         JSON.stringify(data, null, 2),
       );
 
+      if (!response.ok) {
+        throw new UIDBypassError(
+          data.error || `HTTP error: ${response.statusText}`,
+          undefined,
+          response.status,
+        );
+      }
+
       if (data && typeof data === "object" && data.error) {
         throw new UIDBypassError(
-          data.message || "Unknown API error",
+          data.error || "Unknown API error",
           data.code,
           response.status,
         );
@@ -114,36 +123,33 @@ export class UIDBypassClient {
     console.log(
       `[UIDBypassClient] createUID() - UID: ${uid}, Duration: ${duration}`,
     );
-    // Convert duration from hours to days for the API
+    // Convert duration from hours to plan_id (days)
     const durationInDays = Math.ceil(parseInt(duration) / 24);
-    return this.request("add_uid_api", {
-      uid,
-      plan_id: durationInDays.toString(),
-      region: "PK",
-    });
+    return this.request(
+      "add_uid_api",
+      {
+        uid,
+        plan_id: durationInDays,
+        region: "PK",
+      },
+      "POST",
+    );
   }
 
   async deleteUID(uid: string): Promise<any> {
     console.log(`[UIDBypassClient] deleteUID() - UID: ${uid}`);
-    return this.request("remove_uid_api", { uid });
-  }
-
-  async checkUID(uid: string): Promise<any> {
-    console.log(`[UIDBypassClient] checkUID() - UID: ${uid}`);
-    return this.request("check", { uid });
+    return this.request("remove_uid_api", { uid }, "POST");
   }
 
   async listUIDs(): Promise<any> {
     console.log(
       `[UIDBypassClient] listUIDs() - Fetching all UIDs from external API`,
     );
-    return this.request("list_uids_api", {});
+    return this.request("list_uids_api", {}, "GET");
   }
 
-  async updateUID(oldUid: string, newUid: string): Promise<any> {
-    console.log(
-      `[UIDBypassClient] updateUID() - Old UID: ${oldUid}, New UID: ${newUid}`,
-    );
-    return this.request("update", { uid: oldUid, new_uid: newUid });
+  async renewUID(uid: string, days: number): Promise<any> {
+    console.log(`[UIDBypassClient] renewUID() - UID: ${uid}, Days: ${days}`);
+    return this.request("renew_uid_api", { uid, days }, "POST");
   }
 }

@@ -184,11 +184,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // SERVER-SIDE PRICING - Never trust client-provided cost
       const pricingTiers: Record<number, number> = {
-        24: 0.50,
-        72: 1.30,
-        168: 2.33,
-        336: 3.50,
-        720: 5.20,
+        24: 0.50,    // 1 day
+        48: 0.80,    // 2 days
+        72: 1.30,    // 3 days
+        120: 2.00,   // 5 days
+        168: 2.33,   // 7 days
+        720: 5.20,   // 30 days
+        1440: 9.50,  // 60 days
       };
 
       const cost = pricingTiers[uidData.duration];
@@ -211,13 +213,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate expiration date (duration in hours)
       const expiresAt = new Date(Date.now() + uidData.duration * 3600000);
       
-      // Map duration (hours) to plan ID - matching API plan structure
+      // Map duration (hours) to plan ID - matching external API plan structure (1,2,3,5,7,30,60 days)
       const durationToPlanId: Record<number, number> = {
-        24: 1,    // 1 day
-        72: 3,    // 3 days
-        168: 7,   // 7 days
-        336: 14,  // 14 days
-        720: 30,  // 30 days
+        24: 1,     // 1 day
+        48: 2,     // 2 days
+        72: 3,     // 3 days
+        120: 5,    // 5 days
+        168: 7,    // 7 days
+        720: 30,   // 30 days
+        1440: 60,  // 60 days
       };
       
       const planId = durationToPlanId[uidData.duration];
@@ -254,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const settings = await storage.getSettings();
         if (settings?.baseUrl && settings?.apiKey) {
           const apiClient = await UIDBypassClient.create();
-          apiResult = await apiClient.createUID(uidData.uidValue, uidData.duration.toString());
+          apiResult = await apiClient.createUID(uidData.uidValue, planId);
           console.log('[UID Creation] Successfully synced with external API');
           
           // Log successful external API sync

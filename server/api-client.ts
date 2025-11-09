@@ -121,17 +121,16 @@ export class UIDBypassClient {
     }
   }
 
-  async createUID(uid: string, duration: string): Promise<any> {
+  async createUID(uid: string, planId: number): Promise<any> {
     console.log(
-      `[UIDBypassClient] createUID() - UID: ${uid}, Duration: ${duration}`,
+      `[UIDBypassClient] createUID() - UID: ${uid}, Plan ID: ${planId}`,
     );
-    // Convert duration from hours to plan_id (days)
-    const durationInDays = Math.ceil(parseInt(duration) / 24);
+    // planId should already be the correct external API plan ID (1,2,3,5,7,30,60)
     return this.request(
       "add_uid_api",
       {
         uid,
-        plan_id: durationInDays,
+        plan_id: planId,
         region: "PK",
       },
       "POST",

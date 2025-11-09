@@ -208,46 +208,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Insufficient credits" });
       }
 
-      // Call external UID bypass API
+      // Calculate expiration date (duration in hours)
+      const expiresAt = new Date(Date.now() + uidData.duration * 3600000);
+      
+      // Determine plan ID based on duration
+      const durationInDays = Math.ceil(uidData.duration / 24);
+      const planId = durationInDays;
+      
+      // Create UID record in MongoDB FIRST (local storage is primary)
+      const uid = await storage.createUid({
+        ...uidData,
+        planId: planId,
+        cost: cost.toFixed(2),
+        expiresAt,
+      });
+
+      // Deduct credits
+      const newCredits = currentCredits - cost;
+      await storage.updateUserCredits(uidData.userId, newCredits.toFixed(2));
+
+      // Log activity
+      await storage.logActivity({
+        userId: uidData.userId,
+        action: "create_uid",
+        details: `Created UID ${uidData.uidValue} with ${uidData.duration}h duration - Cost: $${cost.toFixed(2)}`,
+      });
+
+      // Try to sync with external API (optional - won't fail if API is down)
+      let apiResult = null;
+      let apiError = null;
       try {
-        const apiClient = await UIDBypassClient.create();
-        const apiResult = await apiClient.createUID(uidData.uidValue, uidData.duration.toString());
-        
-        // Calculate expiration date (duration in hours)
-        const expiresAt = new Date(Date.now() + uidData.duration * 3600000);
-        
-        // Extract plan ID from API response
-        const planId = apiResult.data?.plan?.id;
-        if (!planId) {
-          return res.status(500).json({ error: "Failed to get plan ID from API response" });
+        const settings = await storage.getSettings();
+        if (settings?.baseUrl && settings?.apiKey) {
+          const apiClient = await UIDBypassClient.create();
+          apiResult = await apiClient.createUID(uidData.uidValue, uidData.duration.toString());
+          console.log('[UID Creation] Successfully synced with external API');
+        } else {
+          console.log('[UID Creation] External API not configured, skipping sync');
         }
-        
-        // Create UID record in database with server-calculated cost and expiresAt
-        const uid = await storage.createUid({
-          ...uidData,
-          planId: Number(planId),
-          cost: cost.toFixed(2),
-          expiresAt,
-        });
-
-        // Deduct credits
-        const newCredits = currentCredits - cost;
-        await storage.updateUserCredits(uidData.userId, newCredits.toFixed(2));
-
-        // Log activity
+      } catch (error: any) {
+        apiError = error.message || 'Unknown API error';
+        console.error('[UID Creation] External API sync failed (non-critical):', apiError);
+        // Log the API failure but don't block UID creation
         await storage.logActivity({
           userId: uidData.userId,
-          action: "create_uid",
-          details: `Created UID ${uidData.uidValue} with ${uidData.duration}h duration - Cost: $${cost.toFixed(2)}`,
+          action: "external_api_error",
+          details: `UID ${uidData.uidValue} created locally but external API sync failed: ${apiError}`,
         });
-
-        res.json({ uid, newCredits: newCredits.toFixed(2), apiResult });
-      } catch (apiError: any) {
-        if (apiError instanceof UIDBypassError) {
-          return res.status(400).json({ error: `API Error: ${apiError.message}` });
-        }
-        throw apiError;
       }
+
+      res.json({ 
+        uid, 
+        newCredits: newCredits.toFixed(2), 
+        apiResult,
+        warning: apiError ? `UID created successfully in local database, but external API sync failed: ${apiError}` : undefined
+      });
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Failed to create UID" });
     }

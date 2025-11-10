@@ -61,9 +61,6 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
-          <div className="mx-auto mb-2">
-            <img src="/logo.webp" alt="Logo" className="w-16 h-16 mx-auto" />
-          </div>
           <CardTitle className="text-2xl font-semibold">UID Management System</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>

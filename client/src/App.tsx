@@ -33,7 +33,6 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
           <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <img src="/logo.webp" alt="Logo" className="w-8 h-8" />
               <div>
                 <p className="text-sm font-medium">UID Management System</p>
                 <p className="text-xs text-muted-foreground">Administrative Dashboard</p>

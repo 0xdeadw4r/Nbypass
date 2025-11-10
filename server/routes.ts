@@ -184,14 +184,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // SERVER-SIDE PRICING - Never trust client-provided cost
       const pricingTiers: Record<number, number> = {
-        24: 10,      // 1 day - Plan ID 7
-        48: 20,      // 2 days - Plan ID 1
-        72: 30,      // 3 days - Plan ID 8
-        120: 50,     // 5 days - Plan ID 2
-        168: 70,     // 7 days - Plan ID 3
-        720: 300,    // 30 days - Plan ID 4
-        1440: 600,   // 60 days - Plan ID 5
-        2160: 900,   // 90 days - Plan ID 6
+        24: 0.50,    // 1 day - Plan ID 7
+        48: 0.80,    // 2 days - Plan ID 1
+        72: 1.30,    // 3 days - Plan ID 8
+        120: 2.00,   // 5 days - Plan ID 2
+        168: 2.33,   // 7 days - Plan ID 3
+        720: 5.20,   // 30 days - Plan ID 4
+        1440: 9.50,  // 60 days - Plan ID 5
+        2160: 14.00, // 90 days - Plan ID 6
       };
 
       const cost = pricingTiers[uidData.duration];

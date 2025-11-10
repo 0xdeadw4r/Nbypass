@@ -184,13 +184,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // SERVER-SIDE PRICING - Never trust client-provided cost
       const pricingTiers: Record<number, number> = {
-        24: 0.50,    // 1 day
-        48: 0.80,    // 2 days
-        72: 1.30,    // 3 days
-        120: 2.00,   // 5 days
-        168: 2.33,   // 7 days
-        720: 5.20,   // 30 days
-        1440: 9.50,  // 60 days
+        24: 10,      // 1 day - Plan ID 7
+        48: 20,      // 2 days - Plan ID 1
+        72: 30,      // 3 days - Plan ID 8
+        120: 50,     // 5 days - Plan ID 2
+        168: 70,     // 7 days - Plan ID 3
+        720: 300,    // 30 days - Plan ID 4
+        1440: 600,   // 60 days - Plan ID 5
+        2160: 900,   // 90 days - Plan ID 6
       };
 
       const cost = pricingTiers[uidData.duration];
@@ -213,15 +214,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate expiration date (duration in hours)
       const expiresAt = new Date(Date.now() + uidData.duration * 3600000);
       
-      // Map duration (hours) to plan ID - matching external API plan structure (1,2,3,5,7,30,60 days)
+      // Map duration (hours) to plan ID - matching your actual plan structure
       const durationToPlanId: Record<number, number> = {
-        24: 1,     // 1 day
-        48: 2,     // 2 days
-        72: 3,     // 3 days
-        120: 5,    // 5 days
-        168: 7,    // 7 days
-        720: 30,   // 30 days
-        1440: 60,  // 60 days
+        24: 7,      // 1 day
+        48: 1,      // 2 days
+        72: 8,      // 3 days
+        120: 2,     // 5 days
+        168: 3,     // 7 days
+        720: 4,     // 30 days
+        1440: 5,    // 60 days
+        2160: 6,    // 90 days
       };
       
       const planId = durationToPlanId[uidData.duration];

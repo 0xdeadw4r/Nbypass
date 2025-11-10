@@ -58,11 +58,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+      {/* Animated background gradients */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <Card className="w-full max-w-md animate-fade-in-up shadow-2xl">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-2xl font-semibold">UID Management System</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardTitle className="text-2xl font-semibold animate-fade-in">UID Management System</CardTitle>
+          <CardDescription className="animate-fade-in animation-delay-200">Sign in to your account</CardDescription>
         </CardHeader>
         
         <CardContent>
@@ -72,15 +79,15 @@ export default function Login() {
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="animate-fade-in animation-delay-300">
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <div className="relative group">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                         <Input
                           {...field}
                           placeholder="Enter username"
-                          className="pl-10"
+                          className="pl-10 transition-all focus:scale-[1.02]"
                           disabled={isLoading}
                           data-testid="input-username"
                         />
@@ -95,16 +102,16 @@ export default function Login() {
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="animate-fade-in animation-delay-400">
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <div className="relative group">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                         <Input
                           {...field}
                           type="password"
                           placeholder="Enter password"
-                          className="pl-10"
+                          className="pl-10 transition-all focus:scale-[1.02]"
                           disabled={isLoading}
                           data-testid="input-password"
                         />
@@ -117,7 +124,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full animate-fade-in animation-delay-500 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 disabled={isLoading}
                 data-testid="button-login"
               >
@@ -126,7 +133,7 @@ export default function Login() {
             </form>
           </Form>
 
-          <div className="mt-6 pt-4 border-t text-center text-xs text-muted-foreground">
+          <div className="mt-6 pt-4 border-t text-center text-xs text-muted-foreground animate-fade-in animation-delay-600">
             <p>Secure authentication system</p>
           </div>
         </CardContent>

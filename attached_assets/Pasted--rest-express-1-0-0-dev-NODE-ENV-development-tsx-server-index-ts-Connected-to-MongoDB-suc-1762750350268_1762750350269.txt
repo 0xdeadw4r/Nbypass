@@ -1,0 +1,36 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+✅ Connected to MongoDB successfully
+   Database: uid
+🔧 Initializing database...
+ℹ️  Owner user already exists
+ℹ️  Found 5 existing plans
+✅ Database initialization complete!
+4:51:39 AM [express] serving on port 5000
+[Cleanup Scheduler] Starting activity log cleanup scheduler...
+[Cleanup Scheduler] Running activity log cleanup...
+[Cleanup Scheduler] Scheduler started. Will run every 2 days.
+[Cleanup Scheduler] Cleaned up 0 activity logs older than 2 days.
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+4:51:42 AM [express] GET /api/auth/me 200 in 22ms :: {"user":{"id":"6910f56e26b36efd9ebcd237","usern…
+4:51:42 AM [express] GET /api/users 304 in 23ms :: [{"id":"6910f96354f7edd6eef96403","username":"ADI…
+4:51:42 AM [express] GET /api/uids/user/6910f56e26b36efd9ebcd237 304 in 23ms :: [{"id":"69116f51494f…
+4:51:42 AM [express] GET /api/activity 200 in 32ms :: [{"id":"69116f52494fc42e9deaa450","userId":"69…
+4:51:45 AM [express] GET /api/auth/me 304 in 16ms :: {"user":{"id":"6910f56e26b36efd9ebcd237","usern…
+[UIDBypassClient] listUIDs() - Page: 1, PerPage: 20, Status: all
+[UIDBypassClient] List URL: https://dash.xitters.xyz/api/handler.php?action=list_uids_api&page=1&per_page=20
+[UIDBypassClient] List response: 
+Failed to fetch external UIDs, returning local UIDs only: UIDBypassError: List UIDs failed: Unexpected end of JSON input
+    at UIDBypassClient.listUIDs (/home/runner/workspace/server/api-client.ts:205:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:335:30) {
+  code: undefined,
+  statusCode: undefined
+}
+4:51:46 AM [express] GET /api/uids/all 200 in 348ms :: [{"id":"69116f51494fc42e9deaa449","userId":"6…

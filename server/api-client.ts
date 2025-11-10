@@ -1,4 +1,3 @@
-
 import { storage } from "./storage";
 
 export class UIDBypassError extends Error {
@@ -19,7 +18,7 @@ export class UIDBypassClient {
   private timeoutMs: number;
 
   constructor(baseUrl: string, apiKey: string, timeoutMs: number = 20000) {
-    this.baseUrl = baseUrl;
+    this.baseUrl = baseUrl.replace(/\/$/, '');
     this.apiKey = apiKey;
     this.timeoutMs = timeoutMs;
   }
@@ -29,7 +28,7 @@ export class UIDBypassClient {
 
     if (!settings || !settings.baseUrl || !settings.apiKey) {
       throw new UIDBypassError(
-        "API settings not configured. Please configure in Settings page.",
+        "API configuration not found. Please configure Base URL and API Key in Settings.",
       );
     }
 
@@ -41,15 +40,12 @@ export class UIDBypassClient {
     params: Record<string, any>,
     method: string = "POST",
   ): Promise<any> {
-    // Use the base URL directly - it should already be configured correctly
     const url = new URL(this.baseUrl);
     url.searchParams.append("action", action);
 
     console.log(`[UIDBypassClient] Request URL: ${url.toString()}`);
-    console.log(
-      `[UIDBypassClient] Method: ${method}, Action: ${action}, Body:`,
-      params,
-    );
+    console.log(`[UIDBypassClient] Method: ${method}, Action: ${action}`);
+    console.log(`[UIDBypassClient] Body:`, JSON.stringify(params, null, 2));
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -72,24 +68,17 @@ export class UIDBypassClient {
       const response = await fetch(url.toString(), fetchOptions);
       const duration = Date.now() - startTime;
 
-      clearTimeout(timeout);
-
-      console.log(
-        `[UIDBypassClient] Response: ${response.status} ${response.statusText} (${duration}ms)`,
-      );
+      console.log(`[UIDBypassClient] Response: ${response.status} ${response.statusText} (${duration}ms)`);
 
       let data;
       const responseText = await response.text();
-      console.log(`[UIDBypassClient] Raw response text:`, responseText);
+      console.log(`[UIDBypassClient] Raw response:`, responseText.substring(0, 500));
       
       try {
         data = JSON.parse(responseText);
-        console.log(
-          `[UIDBypassClient] Parsed response data:`,
-          JSON.stringify(data, null, 2),
-        );
+        console.log(`[UIDBypassClient] Parsed data:`, JSON.stringify(data, null, 2));
       } catch (parseError) {
-        console.error(`[UIDBypassClient] Failed to parse JSON response:`, parseError);
+        console.error(`[UIDBypassClient] JSON parse error:`, parseError);
         throw new UIDBypassError(
           `Invalid JSON response from API: ${responseText.substring(0, 200)}`,
           undefined,
@@ -97,9 +86,11 @@ export class UIDBypassClient {
         );
       }
 
+      clearTimeout(timeout);
+
       if (!response.ok) {
         throw new UIDBypassError(
-          data.error || `HTTP error: ${response.statusText}`,
+          data.error || `HTTP ${response.status}: ${response.statusText}`,
           undefined,
           response.status,
         );
@@ -118,14 +109,11 @@ export class UIDBypassClient {
       clearTimeout(timeout);
 
       if (error.name === "AbortError") {
-        console.error(
-          `[UIDBypassClient] Request timeout after ${this.timeoutMs}ms`,
-        );
-        throw new UIDBypassError("Request timeout");
+        console.error(`[UIDBypassClient] Request timeout after ${this.timeoutMs}ms`);
+        throw new UIDBypassError(`Request timeout (${this.timeoutMs}ms)`);
       }
 
       if (error instanceof UIDBypassError) {
-        console.error(`[UIDBypassClient] API Error:`, error.message);
         throw error;
       }
 
@@ -134,17 +122,26 @@ export class UIDBypassClient {
     }
   }
 
-  async createUID(uid: string, planId: number): Promise<any> {
-    console.log(
-      `[UIDBypassClient] createUID() - UID: ${uid}, Plan ID: ${planId}`,
-    );
-    // planId should already be the correct external API plan ID (1,2,3,5,7,30,60)
+  async createUID(uid: string, planId: number, region: string = "PK"): Promise<any> {
+    console.log(`[UIDBypassClient] createUID() - UID: ${uid}, Plan: ${planId}, Region: ${region}`);
     return this.request(
       "add_uid_api",
       {
         uid,
         plan_id: planId,
-        region: "PK",
+        region,
+      },
+      "POST",
+    );
+  }
+
+  async createUIDFree(uid: string, region: string = "PK"): Promise<any> {
+    console.log(`[UIDBypassClient] createUIDFree() - UID: ${uid}, Region: ${region}`);
+    return this.request(
+      "add_uid_free_api",
+      {
+        uid,
+        region,
       },
       "POST",
     );
@@ -152,25 +149,80 @@ export class UIDBypassClient {
 
   async deleteUID(uid: string): Promise<any> {
     console.log(`[UIDBypassClient] deleteUID() - UID: ${uid}`);
-    return this.request("remove_uid_api", { uid }, "POST");
+    return this.request(
+      "remove_uid_api",
+      {
+        uid
+      },
+      "POST",
+    );
   }
 
-  async listUIDs(): Promise<any> {
-    console.log(
-      `[UIDBypassClient] listUIDs() - Fetching all UIDs from external API`,
-    );
-    return this.request("list_uids_api", {}, "GET");
+  async listUIDs(page: number = 1, perPage: number = 20, status?: string): Promise<any> {
+    console.log(`[UIDBypassClient] listUIDs() - Page: ${page}, PerPage: ${perPage}, Status: ${status || 'all'}`);
+    const params: Record<string, any> = {};
+    if (status) params.status = status;
+    
+    const url = new URL(this.baseUrl);
+    url.searchParams.append("action", "list_uids_api");
+    url.searchParams.append("page", page.toString());
+    url.searchParams.append("per_page", perPage.toString());
+    if (status) url.searchParams.append("status", status);
+
+    console.log(`[UIDBypassClient] List URL: ${url.toString()}`);
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          "X-API-Key": this.apiKey,
+        },
+      });
+
+      clearTimeout(timeout);
+
+      const responseText = await response.text();
+      console.log(`[UIDBypassClient] List response:`, responseText.substring(0, 500));
+      
+      const data = JSON.parse(responseText);
+      
+      if (!response.ok || (data && data.error)) {
+        throw new UIDBypassError(
+          data.error || `HTTP ${response.status}`,
+          undefined,
+          response.status,
+        );
+      }
+
+      return data;
+    } catch (error: any) {
+      clearTimeout(timeout);
+      if (error instanceof UIDBypassError) throw error;
+      throw new UIDBypassError(`List UIDs failed: ${error.message}`);
+    }
   }
 
   async renewUID(uid: string, days: number): Promise<any> {
     console.log(`[UIDBypassClient] renewUID() - UID: ${uid}, Days: ${days}`);
-    return this.request("renew_uid_api", { uid, days }, "POST");
+    return this.request(
+      "renew_uid_api",
+      {
+        uid,
+        days,
+      },
+      "POST",
+    );
   }
 
   async updateUID(oldUid: string, newUid: string): Promise<any> {
-    console.log(`[UIDBypassClient] updateUID() - Old UID: ${oldUid}, New UID: ${newUid}`);
-    return this.request("remove_uid_api", { uid: oldUid }, "POST").then(async () => {
-      return this.request("add_uid_free_api", { uid: newUid, region: "PK" }, "POST");
-    });
+    console.log(`[UIDBypassClient] updateUID() - Old: ${oldUid}, New: ${newUid}`);
+    console.log(`[UIDBypassClient] Step 1: Deleting old UID`);
+    await this.deleteUID(oldUid);
+    console.log(`[UIDBypassClient] Step 2: Creating new UID (free)`);
+    return await this.createUIDFree(newUid);
   }
 }

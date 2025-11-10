@@ -50,7 +50,6 @@ export default function CreateUID() {
     enabled: isOwner,
   });
 
-  // Find current user with updated credits
   const user = users.find(u => u.id === currentUser?.id) || currentUser;
 
   const { data: myUids = [] } = useQuery<Uid[]>({
@@ -73,26 +72,28 @@ export default function CreateUID() {
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + data.duration);
 
-      return await apiRequest("POST", "/api/uids", {
-        userId: user.id,
+      const response = await apiRequest("POST", "/api/uids", {
+        userId: user!.id,
         uidValue: data.uidValue,
         duration: data.duration,
         cost: selectedTier?.price.toFixed(2),
         expiresAt: expiresAt.toISOString(),
       });
+      return await response.json();
     },
-    onSuccess: (response) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/activity"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/uids/user", currentUser?.id] });
       toast({
-        title: "UID Created Successfully",
-        description: `UID ${form.getValues().uidValue} created. New balance: $${response.newCredits}`,
+        title: "UID Created",
+        description: `UID ${form.getValues().uidValue} created successfully. New balance: $${data.newCredits}`,
       });
       form.reset();
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to Create UID",
+        title: "Creation Failed",
         description: error.message || "An error occurred while creating the UID.",
         variant: "destructive",
       });
@@ -108,12 +109,12 @@ export default function CreateUID() {
       queryClient.invalidateQueries({ queryKey: ["/api/activity"] });
       toast({
         title: "UID Deleted",
-        description: "UID has been successfully deleted from the system.",
+        description: "UID has been removed from the system.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to Delete UID",
+        title: "Deletion Failed",
         description: error.message || "An error occurred while deleting the UID.",
         variant: "destructive",
       });
@@ -151,8 +152,8 @@ export default function CreateUID() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Create UID</h1>
-        <p className="text-muted-foreground">Generate a new UID with custom duration and pricing</p>
+        <h1 className="text-3xl font-semibold mb-2">Create UID</h1>
+        <p className="text-muted-foreground">Generate a new UID with custom duration</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -160,7 +161,7 @@ export default function CreateUID() {
           <Card>
             <CardHeader>
               <CardTitle>UID Information</CardTitle>
-              <CardDescription>Enter the UID details and select duration</CardDescription>
+              <CardDescription>Enter UID details and select duration</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -174,13 +175,13 @@ export default function CreateUID() {
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter 6-12 digit UID"
+                            placeholder="Enter 6-12 character UID"
                             className="font-mono"
                             data-testid="input-uid"
                           />
                         </FormControl>
                         <FormDescription>
-                          Must be 6-12 characters long
+                          Must be 6-12 characters
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -198,7 +199,7 @@ export default function CreateUID() {
                             setSelectedDuration(tier.duration);
                             form.setValue("duration", tier.duration);
                           }}
-                          className={`relative p-4 rounded-lg border-2 transition-all hover-elevate active-elevate-2 ${
+                          className={`relative p-4 rounded-md border-2 transition-all hover-elevate active-elevate-2 ${
                             selectedDuration === tier.duration
                               ? "border-primary bg-primary/5"
                               : "border-border"
@@ -213,7 +214,7 @@ export default function CreateUID() {
                           <div className="text-center">
                             <p className="text-sm font-medium">{tier.days}</p>
                             <p className="text-xs text-muted-foreground mt-1">{tier.hours}</p>
-                            <p className="text-lg font-bold mt-2 text-primary">
+                            <p className="text-lg font-semibold mt-2 text-primary">
                               ${tier.price.toFixed(2)}
                             </p>
                           </div>
@@ -250,7 +251,7 @@ export default function CreateUID() {
           <Card className="sticky top-6">
             <CardHeader>
               <CardTitle>Summary</CardTitle>
-              <CardDescription>Review your UID creation</CardDescription>
+              <CardDescription>Creation details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -268,22 +269,18 @@ export default function CreateUID() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  What's Included
+              <div className="pt-4 border-t space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase">
+                  Included Features
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-chart-2 mt-0.5 flex-shrink-0" />
-                    <span>Instant UID activation</span>
+                    <span>Instant activation</span>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-chart-2 mt-0.5 flex-shrink-0" />
-                    <span>Automatic expiration tracking</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-chart-2 mt-0.5 flex-shrink-0" />
-                    <span>Free updates and deletions</span>
+                    <span>Automatic expiration</span>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-chart-2 mt-0.5 flex-shrink-0" />
@@ -292,12 +289,12 @@ export default function CreateUID() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Your Credits</p>
-                  <p className="text-2xl font-bold text-primary">${currentCredits.toFixed(2)}</p>
+              <div className="pt-4 border-t">
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-xs text-muted-foreground mb-1">Available Credits</p>
+                  <p className="text-2xl font-semibold">${currentCredits.toFixed(2)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Remaining after: ${Math.max(0, remainingCredits).toFixed(2)}
+                    After purchase: ${Math.max(0, remainingCredits).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -309,7 +306,7 @@ export default function CreateUID() {
       <Card>
         <CardHeader>
           <CardTitle>My UIDs</CardTitle>
-          <CardDescription>View and manage your created UIDs</CardDescription>
+          <CardDescription>Manage your created UIDs</CardDescription>
         </CardHeader>
         <CardContent>
           {myUids.length === 0 ? (
@@ -323,7 +320,7 @@ export default function CreateUID() {
               {myUids.map((uid) => (
                 <div
                   key={uid.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate"
+                  className="flex items-center justify-between p-4 rounded-md border hover-elevate"
                   data-testid={`uid-card-${uid.id}`}
                 >
                   <div className="flex-1">
@@ -336,7 +333,7 @@ export default function CreateUID() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        <span>Duration: {uid.duration}h</span>
+                        <span>{uid.duration}h</span>
                       </div>
                       <div>
                         <span>Cost: ${parseFloat(uid.cost).toFixed(2)}</span>
@@ -363,7 +360,7 @@ export default function CreateUID() {
                         <AlertDialogTitle>Delete UID</AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to delete UID <span className="font-mono font-medium">{uid.uidValue}</span>?
-                          This action cannot be undone and will remove the UID from both local and external systems.
+                          This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

@@ -54,8 +54,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Overview</h1>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
+        <h1 className="text-3xl font-semibold mb-2">Dashboard</h1>
+        <p className="text-muted-foreground">System overview and recent activity</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -69,14 +69,14 @@ export default function Dashboard() {
               trendUp={true}
             />
             <StatCard
-              title="Active Credits"
+              title="Total Credits"
               value={`$${totalCredits.toFixed(2)}`}
               icon={DollarSign}
               trend="All users"
               trendUp={true}
             />
             <StatCard
-              title="UIDs Today"
+              title="UIDs Created Today"
               value={uidsToday}
               icon={Zap}
               trend="All users"
@@ -93,10 +93,10 @@ export default function Dashboard() {
         ) : (
           <>
             <StatCard
-              title="My Credits"
+              title="Available Credits"
               value={`$${myCredits.toFixed(2)}`}
               icon={DollarSign}
-              trend="Available balance"
+              trend="Current balance"
               trendUp={true}
             />
             <StatCard
@@ -107,10 +107,10 @@ export default function Dashboard() {
               trendUp={true}
             />
             <StatCard
-              title="My Activity"
+              title="Recent Activity"
               value={activities.length}
               icon={Activity}
-              trend="Recent actions"
+              trend="Last 50 actions"
               trendUp={true}
             />
             <StatCard
@@ -128,10 +128,10 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest operations across all users</CardDescription>
+            <CardDescription>Latest system operations</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {activities.slice(0, 10).map((activity) => {
                 const user = users.find(u => u.id === activity.userId);
                 const isCost = activity.action === "create_uid";
@@ -140,11 +140,11 @@ export default function Dashboard() {
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate"
+                    className="flex items-center justify-between p-3 rounded-md border hover-elevate"
                     data-testid={`activity-${activity.id}`}
                   >
                     <div className="flex-1">
-                      <p className="text-sm font-medium capitalize">{activity.action.replace(/_/g, " ")}</p>
+                      <p className="text-sm font-medium">{activity.action.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="secondary" className="text-xs font-mono">
                           {user?.username || "Unknown"}
@@ -176,18 +176,18 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage your system efficiently</CardDescription>
+            <CardDescription>Common tasks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {isOwner && (
               <a
                 href="/users"
-                className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate active-elevate-2 transition-all"
+                className="flex items-center justify-between p-3 rounded-md border hover-elevate active-elevate-2"
                 data-testid="link-manage-users"
               >
                 <div>
                   <p className="font-medium">Manage Users</p>
-                  <p className="text-sm text-muted-foreground">Add, edit, or remove users</p>
+                  <p className="text-sm text-muted-foreground">Add or remove users</p>
                 </div>
                 <Users className="w-5 h-5 text-muted-foreground" />
               </a>
@@ -195,12 +195,12 @@ export default function Dashboard() {
 
             <a
               href="/create-uid"
-              className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate active-elevate-2 transition-all"
+              className="flex items-center justify-between p-3 rounded-md border hover-elevate active-elevate-2"
               data-testid="link-create-uid"
             >
               <div>
                 <p className="font-medium">Create UID</p>
-                <p className="text-sm text-muted-foreground">Generate new UID with duration</p>
+                <p className="text-sm text-muted-foreground">Generate new UID</p>
               </div>
               <Zap className="w-5 h-5 text-muted-foreground" />
             </a>
@@ -208,12 +208,12 @@ export default function Dashboard() {
             {isOwner && (
               <a
                 href="/credits"
-                className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate active-elevate-2 transition-all"
+                className="flex items-center justify-between p-3 rounded-md border hover-elevate active-elevate-2"
                 data-testid="link-manage-credits"
               >
                 <div>
                   <p className="font-medium">Manage Credits</p>
-                  <p className="text-sm text-muted-foreground">Add or deduct user credits</p>
+                  <p className="text-sm text-muted-foreground">Adjust user balances</p>
                 </div>
                 <DollarSign className="w-5 h-5 text-muted-foreground" />
               </a>
@@ -222,12 +222,12 @@ export default function Dashboard() {
             {isOwner && (
               <a
                 href="/settings"
-                className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate active-elevate-2 transition-all"
+                className="flex items-center justify-between p-3 rounded-md border hover-elevate active-elevate-2"
                 data-testid="link-settings"
               >
                 <div>
-                  <p className="font-medium">API Settings</p>
-                  <p className="text-sm text-muted-foreground">Configure base URL and API key</p>
+                  <p className="font-medium">API Configuration</p>
+                  <p className="text-sm text-muted-foreground">Configure external API</p>
                 </div>
                 <Settings className="w-5 h-5 text-muted-foreground" />
               </a>
@@ -236,12 +236,12 @@ export default function Dashboard() {
             {!isOwner && (
               <a
                 href="/credits"
-                className="flex items-center justify-between p-4 rounded-lg border border-border hover-elevate active-elevate-2 transition-all"
+                className="flex items-center justify-between p-3 rounded-md border hover-elevate active-elevate-2"
                 data-testid="link-view-credits"
               >
                 <div>
-                  <p className="font-medium">My Credits</p>
-                  <p className="text-sm text-muted-foreground">View your credit balance</p>
+                  <p className="font-medium">View Credits</p>
+                  <p className="text-sm text-muted-foreground">Check your balance</p>
                 </div>
                 <DollarSign className="w-5 h-5 text-muted-foreground" />
               </a>

@@ -30,13 +30,13 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1">
-          <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-card sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <img src="/logo.webp" alt="TRYHARD" className="w-8 h-8" />
+              <img src="/logo.webp" alt="Logo" className="w-8 h-8" />
               <div>
-                <p className="text-sm font-medium">TRYHARD UID BYPASS</p>
-                <p className="text-xs text-muted-foreground">Professional Admin Panel</p>
+                <p className="text-sm font-medium">UID Management System</p>
+                <p className="text-xs text-muted-foreground">Administrative Dashboard</p>
               </div>
             </div>
           </header>

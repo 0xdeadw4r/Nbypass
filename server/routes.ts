@@ -230,8 +230,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!planId) {
         return res.status(400).json({ error: "Invalid duration - no matching plan" });
       }
-      
-      // Create UID record in MongoDB FIRST (local storage is primary)
+
+      // STEP 1: Try to create on external API FIRST (required)
+      let apiResult = null;
+      try {
+        const settings = await storage.getSettings();
+        if (!settings?.baseUrl || !settings?.apiKey) {
+          return res.status(400).json({ error: "External API not configured. Please configure in Settings." });
+        }
+
+        const apiClient = await UIDBypassClient.create();
+        apiResult = await apiClient.createUID(uidData.uidValue, planId);
+        console.log('[UID Creation] Successfully created on external API');
+      } catch (error: any) {
+        const errorMsg = error.message || 'Unknown API error';
+        console.error('[UID Creation] External API creation failed:', errorMsg);
+        console.error('[UID Creation] Error details:', {
+          statusCode: error.statusCode,
+          code: error.code,
+          name: error.name
+        });
+        
+        // Return error immediately - DO NOT create locally if external fails
+        return res.status(400).json({ 
+          error: "Failed to create UID on external service",
+          details: errorMsg
+        });
+      }
+
+      // STEP 2: Only create locally if external API succeeded
       const uid = await storage.createUid({
         userId: uidData.userId,
         uidValue: uidData.uidValue,
@@ -242,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt,
       });
 
-      // Deduct credits
+      // STEP 3: Deduct credits only after successful creation
       const newCredits = currentCredits - cost;
       await storage.updateUserCredits(uidData.userId, newCredits.toFixed(2));
 
@@ -253,60 +280,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: `Created UID ${uidData.uidValue} with ${uidData.duration}h duration - Cost: $${cost.toFixed(2)}`,
       });
 
-      // Try to sync with external API (optional - won't fail if API is down)
-      let apiResult = null;
-      let apiError = null;
-      try {
-        const settings = await storage.getSettings();
-        if (settings?.baseUrl && settings?.apiKey) {
-          const apiClient = await UIDBypassClient.create();
-          apiResult = await apiClient.createUID(uidData.uidValue, planId);
-          console.log('[UID Creation] Successfully synced with external API');
-          
-          // Log successful external API sync
-          await storage.logActivity({
-            userId: uidData.userId,
-            action: "external_api_create_success",
-            details: `UID ${uidData.uidValue} successfully created on external API (${uidData.duration}h duration)`,
-          });
-        } else {
-          console.log('[UID Creation] External API not configured, skipping sync');
-          await storage.logActivity({
-            userId: uidData.userId,
-            action: "external_api_not_configured",
-            details: `UID ${uidData.uidValue} created locally only - external API not configured`,
-          });
-        }
-      } catch (error: any) {
-        apiError = error.message || 'Unknown API error';
-        console.error('[UID Creation] External API sync failed (non-critical):', apiError);
-        console.error('[UID Creation] Error details:', {
-          statusCode: error.statusCode,
-          code: error.code,
-          name: error.name
-        });
-        
-        // Log the API failure but don't block UID creation
-        await storage.logActivity({
-          userId: uidData.userId,
-          action: "external_api_create_error",
-          details: `UID ${uidData.uidValue} created locally but external API sync failed: ${apiError}`,
-        });
-        
-        // Provide helpful hint if it's a 500 error
-        if (error.statusCode === 500) {
-          console.warn('[UID Creation] External API returned 500 error. Please check:');
-          console.warn('  1. API credentials in Settings are correct');
-          console.warn('  2. External API service is online');
-          console.warn('  3. The plan_id (3) is valid on the external service');
-        }
-      }
+      await storage.logActivity({
+        userId: uidData.userId,
+        action: "external_api_create_success",
+        details: `UID ${uidData.uidValue} successfully created on external API and local database`,
+      });
 
       res.json({ 
         uid, 
         newCredits: newCredits.toFixed(2), 
-        apiResult,
-        warning: apiError ? `UID created successfully in local database, but external API sync failed: ${apiError}` : undefined
+        apiResult
       });
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Failed to create UID" });

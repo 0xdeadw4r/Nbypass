@@ -216,14 +216,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Map duration (hours) to plan ID - matching your actual plan structure
       const durationToPlanId: Record<number, number> = {
-        24: 7,      // 1 day
-        48: 1,      // 2 days
-        72: 8,      // 3 days
-        120: 2,     // 5 days
-        168: 3,     // 7 days
-        720: 4,     // 30 days
-        1440: 5,    // 60 days
-        2160: 6,    // 90 days
+        24: 7,      // 1 day - Plan ID 7
+        48: 1,      // 2 days - Plan ID 1
+        72: 8,      // 3 days - Plan ID 8
+        120: 2,     // 5 days - Plan ID 2
+        168: 3,     // 7 days - Plan ID 3
+        720: 4,     // 30 days - Plan ID 4
+        1440: 5,    // 60 days - Plan ID 5
+        2160: 6,    // 90 days - Plan ID 6
       };
       
       const planId = durationToPlanId[uidData.duration];

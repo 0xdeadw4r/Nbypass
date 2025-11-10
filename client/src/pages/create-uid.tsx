@@ -33,6 +33,7 @@ const pricingTiers = [
   { duration: 168, hours: "168 Hours", days: "7 Days", price: 2.33, popular: false },
   { duration: 720, hours: "720 Hours", days: "30 Days", price: 5.20, popular: false },
   { duration: 1440, hours: "1440 Hours", days: "60 Days", price: 9.50, popular: false },
+  { duration: 2160, hours: "2160 Hours", days: "90 Days", price: 14.00, popular: false },
 ];
 
 const createUidFormSchema = z.object({

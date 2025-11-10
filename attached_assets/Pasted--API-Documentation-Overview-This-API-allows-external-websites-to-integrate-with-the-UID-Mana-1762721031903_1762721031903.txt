@@ -1,0 +1,438 @@
+# API Documentation
+
+## Overview
+This API allows external websites to integrate with the UID Management System to add, remove, and list UIDs programmatically.
+
+## Base URL
+```
+/api/handler.php
+```
+
+## Authentication
+All API requests require an API key. Include it in one of the following ways:
+
+### Header (Recommended)
+```
+X-API-Key: your_api_key_here
+```
+
+### Query Parameter
+```
+?api_key=your_api_key_here
+```
+
+## Endpoints
+
+### 1. Add UID FREE (1 Day, No Credits)
+Add a new UID with 1 day plan - NO CREDITS REQUIRED.
+
+**Endpoint:** `POST /api/handler.php?action=add_uid_free_api`
+
+**Headers:**
+- `X-API-Key: your_api_key_here`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "uid": "player_uid_123",
+  "region": "PK"
+}
+```
+
+**Parameters:**
+- `uid` (required): The player UID to add
+- `region` (optional): Region code (PK, IN, BD, US, AE, EU, CA, AU, BR). Default: PK
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "UID added successfully (FREE - 1 day)",
+  "data": {
+    "uid_id": 123,
+    "uid": "player_uid_123",
+    "player_name": "PlayerName",
+    "region": "PK",
+    "plan": {
+      "id": 1,
+      "name": "1 day",
+      "days": 1
+    },
+    "start_date": "2024-01-01",
+    "expire_date": "2024-01-02",
+    "credits_used": 0,
+    "credits_remaining": 1000
+  }
+}
+```
+
+---
+
+### 2. Add UID (With Plan - Requires Credits)
+Add a new UID to the system with a specific plan.
+
+**Endpoint:** `POST /api/handler.php?action=add_uid_api`
+
+**Headers:**
+- `X-API-Key: your_api_key_here`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "uid": "player_uid_123",
+  "plan_id": 1,
+  "region": "PK"
+}
+```
+
+**Parameters:**
+- `uid` (required): The player UID to add
+- `plan_id` (required): The plan ID to assign
+- `region` (optional): Region code (PK, IN, BD, US, AE, EU, CA, AU, BR). Default: PK
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "UID added successfully",
+  "data": {
+    "uid_id": 123,
+    "uid": "player_uid_123",
+    "player_name": "PlayerName",
+    "region": "PK",
+    "plan": {
+      "id": 1,
+      "name": "7 days",
+      "days": 7
+    },
+    "start_date": "2024-01-01",
+    "expire_date": "2024-01-08",
+    "credits_remaining": 90
+  }
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Error message here"
+}
+```
+
+---
+
+### 3. Remove UID
+Remove a UID that was added via this API key.
+
+**Endpoint:** `POST /api/handler.php?action=remove_uid_api`
+
+**Headers:**
+- `X-API-Key: your_api_key_here`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "uid_id": 123
+}
+```
+
+**OR using UID:**
+```json
+{
+  "uid": "player_uid_123"
+}
+```
+
+**Parameters:**
+- `uid_id` (required if uid not provided): The UID database ID
+- `uid` (required if uid_id not provided): The player UID
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "UID removed successfully",
+  "data": {
+    "uid_id": 123,
+    "uid": "player_uid_123",
+    "player_name": "PlayerName"
+  }
+}
+```
+
+---
+
+### 4. List UIDs
+Get a list of all UIDs added via this API key.
+
+**Endpoint:** `GET /api/handler.php?action=list_uids_api`
+
+**Headers:**
+- `X-API-Key: your_api_key_here`
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 20, max: 100)
+- `status` (optional): Filter by status (online, offline, expired)
+
+**Example:**
+```
+GET /api/external.php?action=list_uids&page=1&per_page=20&status=online
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 123,
+      "uid": "player_uid_123",
+      "player_name": "PlayerName",
+      "region": "PK",
+      "plan_name": "7 days",
+      "start_date": "2024-01-01",
+      "expire_date": "2024-01-08",
+      "status": "online",
+      "created_at": "2024-01-01 12:00:00"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total": 1,
+    "total_pages": 1
+  }
+}
+```
+
+---
+
+### 5. Renew/Extend UID
+Extend the expiry date of an existing UID.
+
+**Endpoint:** `POST /api/handler.php?action=renew_uid_api`
+
+**Headers:**
+- `X-API-Key: your_api_key_here`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "uid_id": 123,
+  "days": 7
+}
+```
+
+**OR using UID:**
+```json
+{
+  "uid": "player_uid_123",
+  "days": 7
+}
+```
+
+**Parameters:**
+- `uid_id` (required if uid not provided): The UID database ID
+- `uid` (required if uid_id not provided): The player UID
+- `days` (required): Number of days to extend
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "UID renewed successfully",
+  "data": {
+    "uid_id": 123,
+    "uid": "player_uid_123",
+    "player_name": "PlayerName",
+    "old_expire_date": "2024-01-02",
+    "new_expire_date": "2024-01-09",
+    "days_added": 7
+  }
+}
+```
+
+---
+
+## Error Codes
+
+- `401`: Unauthorized - Invalid or missing API key
+- `403`: Forbidden - API key is disabled or paused
+- `400`: Bad Request - Invalid parameters or request format
+
+## API Key Management
+
+API keys can be managed by administrators through the admin panel:
+- Navigate to **Dashboard > API Keys**
+- Create new API keys
+- Set UID limits
+- Restrict allowed plans
+- Enable/Disable API keys
+- Pause/Resume API keys
+- Delete API keys
+
+## Rate Limiting
+
+Currently, there are no rate limits, but administrators can set:
+- **UID Limit**: Maximum number of UIDs that can be added via this API key
+- **Allowed Plans**: Restrict which plans can be used
+
+## Notes
+
+1. Player names are automatically fetched from the game API when adding UIDs
+2. Only UIDs added via a specific API key can be removed using that same API key
+3. API keys are associated with a seller account
+4. Credits are automatically deducted when adding UIDs
+5. The API key must be enabled and not paused to work
+
+## Example Usage (cURL)
+
+### Add UID FREE (1 Day, No Credits)
+```bash
+curl -X POST "https://yourdomain.com/api/handler.php?action=add_uid_free_api" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uid": "player_uid_123",
+    "region": "PK"
+  }'
+```
+
+### Add UID (With Plan - Requires Credits)
+```bash
+curl -X POST "https://yourdomain.com/api/handler.php?action=add_uid_api" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uid": "player_uid_123",
+    "plan_id": 1,
+    "region": "PK"
+  }'
+```
+
+### List UIDs
+```bash
+curl -X GET "https://yourdomain.com/api/handler.php?action=list_uids_api&page=1&per_page=20" \
+  -H "X-API-Key: your_api_key_here"
+```
+
+### Remove UID
+```bash
+curl -X POST "https://yourdomain.com/api/handler.php?action=remove_uid_api" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uid_id": 123
+  }'
+```
+
+### Renew/Extend UID
+```bash
+curl -X POST "https://yourdomain.com/api/handler.php?action=renew_uid_api" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uid_id": 123,
+    "days": 7
+  }'
+```
+
+## JavaScript Example
+
+```javascript
+const API_KEY = 'your_api_key_here';
+const API_URL = 'https://yourdomain.com/api/handler.php';
+
+// Add UID FREE (1 day, no credits)
+async function addUIDFree(uid, region = 'PK') {
+  const response = await fetch(`${API_URL}?action=add_uid_free_api`, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      uid: uid,
+      region: region
+    })
+  });
+  
+  return await response.json();
+}
+
+// Add UID (with plan - requires credits)
+async function addUID(uid, planId, region = 'PK') {
+  const response = await fetch(`${API_URL}?action=add_uid_api`, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      uid: uid,
+      plan_id: planId,
+      region: region
+    })
+  });
+  
+  return await response.json();
+}
+
+// List UIDs
+async function listUIDs(page = 1, perPage = 20, status = '') {
+  const params = new URLSearchParams({
+    action: 'list_uids_api',
+    page: page,
+    per_page: perPage
+  });
+  
+  if (status) params.append('status', status);
+  
+  const response = await fetch(`${API_URL}?${params}`, {
+    headers: {
+      'X-API-Key': API_KEY
+    }
+  });
+  
+  return await response.json();
+}
+
+// Remove UID
+async function removeUID(uidId) {
+  const response = await fetch(`${API_URL}?action=remove_uid_api`, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      uid_id: uidId
+    })
+  });
+  
+  return await response.json();
+}
+
+// Renew/Extend UID
+async function renewUID(uidId, days) {
+  const response = await fetch(`${API_URL}?action=renew_uid_api`, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      uid_id: uidId,
+      days: days
+    })
+  });
+  
+  return await response.json();
+}
+```
+

@@ -72,13 +72,24 @@ export class UIDBypassClient {
 
       let data;
       const responseText = await response.text();
-      console.log(`[UIDBypassClient] Raw response:`, responseText.substring(0, 500));
+      console.log(`[UIDBypassClient] Raw response (${responseText.length} bytes):`, responseText.substring(0, 500));
+      
+      // Handle empty responses from server errors
+      if (!responseText || responseText.trim().length === 0) {
+        console.error(`[UIDBypassClient] Empty response from API (HTTP ${response.status})`);
+        throw new UIDBypassError(
+          `External API returned empty response (HTTP ${response.status}). The API may be down or misconfigured.`,
+          undefined,
+          response.status,
+        );
+      }
       
       try {
         data = JSON.parse(responseText);
         console.log(`[UIDBypassClient] Parsed data:`, JSON.stringify(data, null, 2));
       } catch (parseError) {
         console.error(`[UIDBypassClient] JSON parse error:`, parseError);
+        console.error(`[UIDBypassClient] Response preview:`, responseText.substring(0, 200));
         throw new UIDBypassError(
           `Invalid JSON response from API: ${responseText.substring(0, 200)}`,
           undefined,

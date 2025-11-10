@@ -278,12 +278,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error: any) {
         apiError = error.message || 'Unknown API error';
         console.error('[UID Creation] External API sync failed (non-critical):', apiError);
+        console.error('[UID Creation] Error details:', {
+          statusCode: error.statusCode,
+          code: error.code,
+          name: error.name
+        });
+        
         // Log the API failure but don't block UID creation
         await storage.logActivity({
           userId: uidData.userId,
           action: "external_api_create_error",
           details: `UID ${uidData.uidValue} created locally but external API sync failed: ${apiError}`,
         });
+        
+        // Provide helpful hint if it's a 500 error
+        if (error.statusCode === 500) {
+          console.warn('[UID Creation] External API returned 500 error. Please check:');
+          console.warn('  1. API credentials in Settings are correct');
+          console.warn('  2. External API service is online');
+          console.warn('  3. The plan_id (3) is valid on the external service');
+        }
       }
 
       res.json({ 

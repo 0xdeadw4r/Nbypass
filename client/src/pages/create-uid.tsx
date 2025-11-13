@@ -28,12 +28,12 @@ import type { User, Uid } from "@shared/schema";
 const pricingTiers = [
   { duration: 24, hours: "24 Hours", days: "1 Day", price: 0.50, popular: false },
   { duration: 48, hours: "48 Hours", days: "2 Days", price: 0.80, popular: false },
-  { duration: 72, hours: "72 Hours", days: "3 Days", price: 1.30, popular: true },
+//  { duration: 72, hours: "72 Hours", days: "3 Days", price: 1.30, popular: true },
   { duration: 120, hours: "120 Hours", days: "5 Days", price: 2.00, popular: false },
   { duration: 168, hours: "168 Hours", days: "7 Days", price: 2.33, popular: false },
   { duration: 720, hours: "720 Hours", days: "30 Days", price: 5.20, popular: false },
   { duration: 1440, hours: "1440 Hours", days: "60 Days", price: 9.50, popular: false },
-  { duration: 2160, hours: "2160 Hours", days: "90 Days", price: 14.00, popular: false },
+//  { duration: 2160, hours: "2160 Hours", days: "90 Days", price: 14.00, popular: false },
 ];
 
 const createUidFormSchema = z.object({

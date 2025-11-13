@@ -40,12 +40,7 @@ const menuItems = [
     icon: PlusCircle,
     ownerOnly: false,
   },
-  {
-    title: "Update UID",
-    url: "/update-uid",
-    icon: RefreshCw,
-    ownerOnly: false,
-  },
+ 
   {
     title: "Delete UID",
     url: "/delete-uid",
